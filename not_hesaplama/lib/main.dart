@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -7,6 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -26,6 +29,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int dersKredi = 1;
   double dersHarfDegeri = 4;
   List<Ders> tumDersler;
+  double ortalama = 0;
+  static int sayac = 0;
   var formKey = GlobalKey<FormState>();
 
   @override
@@ -80,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       validator: (gelenDeger) {
-                        if (gelenDeger.length > 6) {
+                        if (gelenDeger.length > 1) {
                           return null;
                         } else {
                           return "Ders Giriniz!";
@@ -91,6 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         setState(() {
                           tumDersler
                               .add(Ders(dersAdi, dersHarfDegeri, dersKredi));
+                          ortalama = 0;
+                          ortalamaHesapla();
                         });
                       },
                     ),
@@ -137,11 +144,29 @@ class _MyHomePageState extends State<MyHomePage> {
                         )
                       ],
                     ),
-                    Divider(
-                      color: Colors.blue,
-                      height: 40,
-                      indent: 2,
-                    )
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: 10),
+                      height: 70,
+                      decoration: BoxDecoration(
+                          border: BorderDirectional(
+                              top: BorderSide(color: Colors.blue, width: 2),
+                              bottom:
+                                  BorderSide(color: Colors.blue, width: 2))),
+                      child: Center(
+                          child: RichText(
+                              text: TextSpan(children: [
+                        TextSpan(
+                            text:tumDersler.length==0?"Lütfen ders ekleyiniz": "Ortalama :  ",
+                            style:
+                                TextStyle(fontSize: 30, color: Colors.black)),
+                        TextSpan(
+                            text:tumDersler.length==0?"":"${ortalama.toStringAsFixed(2)}",
+                            style: TextStyle(
+                                fontSize: 30,
+                                color: Colors.purple,
+                                fontWeight: FontWeight.bold)),
+                      ]))),
+                    ),
                   ],
                 )),
           ),
@@ -213,14 +238,37 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _listeElemanlariOlustur(BuildContext context, int index) {
-    return Card(
-      child: ListTile(
-        title: Text(tumDersler[index].ad),
-        subtitle: Text(tumDersler[index].kredi.toString() +
-            " kredi Ders Nor Değeri " +
-            tumDersler[index].harfDegeri.toString()),
-      ),
-    );
+    sayac++;
+    return Dismissible(
+        key: Key(sayac.toString()),
+        direction: DismissDirection.endToStart,
+        onDismissed: (direction) {
+          setState(() {
+          tumDersler.removeAt(index);
+          ortalamaHesapla();  
+          });
+          
+        },
+        child: Card(
+          child: ListTile(
+            title: Text(tumDersler[index].ad),
+            subtitle: Text(tumDersler[index].kredi.toString() +
+                " kredi Ders Nor Değeri " +
+                tumDersler[index].harfDegeri.toString()),
+          ),
+        ));
+  }
+
+  void ortalamaHesapla() {
+    double toplamNot = 0;
+    double toplamKredi = 0;
+
+    for (var i = 0; i < tumDersler.length; i++) {
+      var dersDegeri = tumDersler[i].harfDegeri * tumDersler[i].kredi;
+      toplamKredi = toplamKredi + tumDersler[i].kredi;
+      toplamNot = toplamNot + dersDegeri;
+    }
+    ortalama = toplamNot / toplamKredi;
   }
 }
 
